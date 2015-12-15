@@ -1,0 +1,112 @@
+#include "mbed.h"
+
+DigitalOut led(LED_RED);
+
+InterruptIn Button4On(A0);  
+InterruptIn Button3On(A1);
+InterruptIn Button2On(A2);
+InterruptIn Button1On(A3);
+
+DigitalOut R6(D0);  //Top 1
+DigitalOut R3(D1);  //Top 2
+DigitalOut C4(D2);  //Top 3
+DigitalOut R1(D3);  //Top 4
+DigitalOut C6(D4);  //Top 5
+DigitalOut C7(D5);  //Top 6
+DigitalOut R2(D6);  //Top 7
+DigitalOut R4(D7);  //Top 8
+DigitalOut R8(PTC0);  //Bottom 1
+DigitalOut C5(D9);  //Bottom 2
+DigitalOut C3(D10); //Bottom 3
+DigitalOut R5(D11); //Bottom 4
+DigitalOut C8(D12); //Bottom 5
+DigitalOut R7(D13); //Bottom 6
+DigitalOut C2(D14); //Bottom 7
+DigitalOut C1(D15); //Bottom 8
+
+DigitalOut Row[9]={D3,D3,D6,D1,D7,D11,D0,D13,PTC0};
+DigitalOut Col[9]={D15,D15,D14,D10,D2,D9,D4,D5,D12};
+
+//For LED on, Rx =1, Cx = 0;
+//Turn off LED Matrix
+//    C1 C2 C3 C4 C5 C6 C7 C8
+// R1 x  x  x  x  x  x  x  x
+// R2 x  x  x  x  x  x  x  x
+// R3 x  x  x  x  x  x  x  x
+// R4 x  x  x  x  x  x  x  x
+// R5 x  x  x  x  x  x  x  x
+// R6 x  x  x  x  x  x  x  x
+// R7 x  x  x  x  x  x  x  x
+// R8 x  x  x  x  x  x  x  x
+void LED_clr( ){
+    R1=0;R2=0;R3=0;R4=0; 
+    R5=0;R6=0;R7=0;R8=0;
+    C1=1;C2=1;C3=1;C4=1;
+    C5=1;C6=1;C7=1;C8=1;     
+}
+
+//Interrupt event for button1
+void Reset(){
+    LED_clr();
+}
+
+//Interrupt event for button3
+void Left() {            
+    LED_clr();
+    Row[4]=1;
+    Row[5]=1;
+    Col[3]=0;
+    Col[4]=0;
+} 
+//Interrupt event for button4
+void Right() {            
+    LED_clr();
+    Row[4]=1;
+    Row[5]=1;
+    Col[5]=0;
+    Col[6]=0;
+}
+
+//Interrupt event for button2
+void ScanMatrix(){
+    LED_clr();
+    for(int i=1;i<9;i++){
+        Col[i] = 0;
+        for(int j=1;j<10;j++) {
+            wait(0.05);
+            Row[j]=1;
+        }
+        LED_clr();
+    }
+}
+//******************************
+
+int main()
+{
+    Reset();
+    while (true) {
+        Button4On.rise(&Right);
+        Button3On.rise(&Left);
+        Button2On.rise(&ScanMatrix);
+        Button1On.rise(&Reset);
+        led=1;
+        LED_clr();
+        Row[1]=1;
+        Row[2]=1;
+        Row[7]=1;
+        Row[8]=1;
+        Col[1]=0;
+        Col[2]=0;
+        Col[7]=0;
+        Col[8]=0;      
+        wait(2);
+        led=0;
+        LED_clr();
+        Row[4]=1;
+        Row[5]=1;
+        Col[4]=0;
+        Col[5]=0;
+        wait(2);
+    }
+    
+}
